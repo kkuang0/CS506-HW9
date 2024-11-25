@@ -22,16 +22,26 @@ document.getElementById("experiment-form").addEventListener("submit", async func
         return;
     }
 
+    // Disable the button to prevent duplicate submissions
+    const submitButton = document.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+
     // If all validations pass, submit the form
-    fetch("/run_experiment", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ activation: activation, lr: lr, step_num: stepNum })
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+        const response = await fetch("/run_experiment", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ activation: activation, lr: lr, step_num: stepNum })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
         // Show and set images if they exist
         const resultsDiv = document.getElementById("results");
         resultsDiv.style.display = "block";
@@ -41,9 +51,11 @@ document.getElementById("experiment-form").addEventListener("submit", async func
             resultImg.src = `/${data.result_gif}`;
             resultImg.style.display = "block";
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error("Error running experiment:", error);
         alert("An error occurred while running the experiment.");
-    });
+    } finally {
+        // Re-enable the button
+        submitButton.disabled = false;
+    }
 });

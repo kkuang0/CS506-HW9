@@ -4,7 +4,6 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import os
 from functools import partial
-from matplotlib.patches import Circle
 from mpl_toolkits.mplot3d import Axes3D
 import networkx as nx
 
@@ -42,7 +41,7 @@ class MLP:
         self.z1 = np.dot(X, self.W1) + self.b1
         self.a1 = self.activation(self.z1)
         self.z2 = np.dot(self.a1, self.W2) + self.b2
-        self.a2 = self.activation(self.z2)  # Linear activation for the output layer
+        self.a2 = self.z2 
         return self.a2
 
     def backward(self, X, y):
@@ -64,14 +63,7 @@ class MLP:
         self.b2 -= self.lr * db2
         self.W1 -= self.lr * dW1
         self.b1 -= self.lr * db1
-        
-        # Store gradients for visualization
-        self.gradients = {
-            'dW1': dW1,
-            'db1': db1,
-            'dW2': dW2,
-            'db2': db2
-        }
+    
 
 def generate_data(n_samples=100):
     np.random.seed(0)
@@ -98,7 +90,10 @@ def update(frame, mlp, ax_input, ax_hidden, ax_gradient, X, y):
     ax_hidden.set_title(f"Hidden Space at Step {frame * 10}")
 
     # Plot decision hyperplane in the hidden space
-    xx, yy = np.meshgrid(np.linspace(-1, 1, 30), np.linspace(-1, 1, 30))
+    x_range = np.linspace(hidden_features[:, 0].min() - 0.5, hidden_features[:, 0].max() + 0.5, 50)
+    y_range = np.linspace(hidden_features[:, 1].min() - 0.5, hidden_features[:, 1].max() + 0.5, 50)
+
+    xx, yy = np.meshgrid(x_range, y_range)
     zz = np.zeros_like(xx)
     if mlp.W2.shape[0] == 3:  # Only plot if the hidden dimension is 3
         zz = (-mlp.W2[0, 0] * xx - mlp.W2[1, 0] * yy - mlp.b2[0, 0]) / mlp.W2[2, 0]
